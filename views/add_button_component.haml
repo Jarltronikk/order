@@ -1,0 +1,22 @@
+%template#add-to-order-template
+  %form{ :action => "add-to-order", :method => "post"}
+    %input{:type => "submit", :value => "Add", :class => "button"}
+
+
+:javascript
+  (function (){
+  var currentscript= document.currentScript
+  customElements.define('add-to-order-button',
+    class extends HTMLElement {
+      constructor() {
+        super()
+        var template = currentscript
+          .ownerDocument
+          .getElementById('add-to-order-template')
+          .content
+        var shadowRoot = this.attachShadow({mode: 'open'})
+        shadowRoot.appendChild(template.cloneNode(true))
+      }
+    }
+  )
+  }())
