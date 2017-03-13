@@ -14,7 +14,7 @@ def notify_product
   end
 end
 queue = channel.queue("", :exclusive => true, :durable=>false)
-queue.bind($registryExchange, :routing_key=>"action.product.registration.request")
+queue.bind($registryExchange, :routing_key=>"product.registration")
 queue.subscribe(:manual_ack => true, :block => false) do |delivery_info, properties, body|
   begin
     notify_product
