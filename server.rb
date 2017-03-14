@@ -3,25 +3,29 @@ require 'json'
 require "bunny"
 require 'haml'
 $base_uri=nil
+$temporaryorderlist={}
 rabbitConn = Bunny.new(ENV["RABBITMQ"])
 rabbitConn.start
 channel=rabbitConn.create_channel
-$registryExchange=channel.topic("registry")
-def notify_product
-  if not $base_uri.nil?
-    $registryExchange.publish('{"key":"buy","priority":0,"uri-template":"'+$base_uri+'/order/buy-button/?product={product}"}', :routing_key => "action.product.registration")
-
-  end
-end
+$orderExchange=channel.topic("orders")
 queue = channel.queue("", :exclusive => true, :durable=>false)
-queue.bind($registryExchange, :routing_key=>"product.registration")
+queue.bind($orderExchange, :routing_key=>"create.order")
 queue.subscribe(:manual_ack => true, :block => false) do |delivery_info, properties, body|
-  begin
-    notify_product
-  rescue
-    #TODO
+  if(not $base_uri.nil?)
+    begin
+      puts body
+      message=JSON.parse body
+      id=message["id"]
+      uri=$base_uri+"/order/"+id
+      $temporaryorderlist[id]=message
+      puts uri
+      $orderExchange.publish('{"id":"'+id+'","uri":"'+uri+'"}', :routing_key =>"created.order")
+    rescue Exception => e
+      puts e
+    end
+    channel.ack(delivery_info.delivery_tag)
+    $orderExchange
   end
-  channel.ack(delivery_info.delivery_tag)
 end
 error do
   @e = request.env['sinatra_error']
@@ -29,13 +33,10 @@ error do
   "500 server error".to_json
 end
 
-get '/order/buy-button/' do
-  haml :buy_button ,:locals=>{:uri=>params['uri']}
-end
-
-
 get '/order/register-hack' do
   $base_uri=request.base_url
-  notify_product
   "OK"
+end
+get "/order/:id" do
+  $temporaryorderlist[params['id']].to_json
 end
