@@ -17,9 +17,13 @@ queue.subscribe(:manual_ack => true, :block => false) do |delivery_info, propert
       message=JSON.parse body
       id=message["id"]
       uri=$base_uri+"/order/"+id
-      $temporaryorderlist[id]=message
-      puts uri
-      $orderExchange.publish('{"id":"'+id+'","uri":"'+uri+'"}', :routing_key =>"created.order")
+      if message["items"].all? { |item|item["product"].start_with?$base_uri}
+        $temporaryorderlist[id]=message
+        puts uri
+        $orderExchange.publish('{"id":"'+id+'","uri":"'+uri+'"}', :routing_key =>"created.order")
+      else
+        $orderExchange.publish('{"id":"'+id+'"}', :routing_key =>"rejected.order")
+      end
     rescue Exception => e
       puts e
     end
