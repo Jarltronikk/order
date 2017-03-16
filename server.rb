@@ -41,6 +41,9 @@ get '/order/register-hack' do
   $base_uri=request.base_url
   "OK"
 end
+get "/order/order-component" do
+  haml :order_component
+end
 get "/order/:id" do
   $temporaryorderlist[params['id']].to_json
 end
