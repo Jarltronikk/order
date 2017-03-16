@@ -21,14 +21,14 @@
         xhr.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
               var order = JSON.parse(this.responseText);
-              shadowRoot.querySelector('.order').innerHTML=order
+              shadowRoot.querySelector('.order').innerHTML=this.responseText
           }
 
-          var orderurl=this.getAttribute('order')
-          xhr.open('Get', orderurl);
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.send();
          }
+        var orderurl=this.getAttribute('order')
+        xhr.open('Get', orderurl);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send();
       }
     }
     )
